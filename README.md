@@ -41,4 +41,20 @@ docker run -d --name my-php-container -p 8090:80 my-php-image
 
 ## Pendiente
 
-- La base de datos MySQL: la página Libros todavía no funciona.
+## Base de datos
+
+- `mysql/Dockerfile`: imagen `biblioteca-mysql` a partir de `mysql:8.4`, con `biblioteca.sql` en `/docker-entrypoint-initdb.d/` (se carga solo la primera vez, con el volumen vacío).
+- Variables: `bd.env` (MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD) y `web.env` (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD). No están en el repositorio: hay que crearlas.
+- Volumen `datos-biblioteca` en `/var/lib/mysql`. Red `red-biblioteca`. MySQL no publica ningún puerto.
+
+Arrancar, desde la raíz del repositorio:
+
+```
+cd mysql && docker build -t biblioteca-mysql . && cd ..
+docker network create red-biblioteca
+docker volume create datos-biblioteca
+docker run -d --name bd --network red-biblioteca --env-file bd.env -v datos-biblioteca:/var/lib/mysql biblioteca-mysql
+docker run -d --name web --network red-biblioteca --env-file web.env -p 8090:80 my-php-image
+```
+
+Empezar de cero (se borran los datos): `docker rm -f bd` y `docker volume rm datos-biblioteca`.- La base de datos MySQL: la página Libros todavía no funciona.
